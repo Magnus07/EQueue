@@ -114,9 +114,6 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
       showAppointments(msg);
       return;
     }
-    if (action === "test"){
-      text = 'У розробці.';
-    }
     if (action === "makeAnAppointment"){
       makeAnAppointment(msg);
       return;
@@ -166,7 +163,7 @@ function showAppointments(msg){
       }
     }
     if (response === "")
-      response = "Наразі немає записів. Хутчіш запишіться!"
+      response = "Наразі ви ніде не записані. Хутчіш записуйтесь!"
     bot.sendMessage(msg.chat.id, response);
   })
 }
@@ -362,7 +359,6 @@ function showSubjects(msg){
         response += (i + 1) +". " + subjects[i].subject + "\n";
         opts.push([{text : subjects[i].subject, callback_data: 'toappoint_' + subjects[i]._id}]);
       }
-      opts.push([{text : "Вихід", callback_data: 'test'}]);
       response += "Ви можете записатися на одну з дисциплін: ";
       bot.sendMessage(msg.chat.id, response, 	{ reply_markup: { inline_keyboard: opts }});
     }
@@ -382,7 +378,6 @@ function makeAnAppointment(msg){
           response += (i + 1) +". " + tutor.subjects[i].subject + "\n";
           opts.push([{text : tutor.subjects[i].subject, callback_data: 'newappointment_' + tutor.subjects[i]._id}]);
         }
-        opts.push([{text : "Вихід", callback_data: 'test'}]);
         response += "Оберіть дисципліну, для якої хочете створити електронну чергу: ";
         bot.sendMessage(msg.chat.id, response, 	{ reply_markup: { inline_keyboard: opts }});
       })
@@ -422,7 +417,7 @@ function newAppointment(msg, subjectID){
                           if (err){
       
                           } else {
-                            bot.sendMessage(msg.chat.id, "Успішно збережено. Очікуйте чергу студентів :)")
+                            bot.sendMessage(msg.chat.id, "Успішно збережено. Очікуйте купу студентів :)")
                           }
                         })
                       }})
