@@ -462,21 +462,19 @@ function showKeyboard(user, isTutor, isAdmin = false){
       reply_markup: {
         inline_keyboard: [
           [
-            [
-              {
-                text: ' 🎓 Доступні дисципліни',
+            {
+              text: ' 🎓 Доступні дисципліни',
+              // we shall check for this value when we listen
+              // for "callback_query"
+              callback_data: 'subjects'
+            }
+          ],
+            [{
+                text: ' 📝 Мої записи',
                 // we shall check for this value when we listen
                 // for "callback_query"
-                callback_data: 'subjects'
+                callback_data: 'appointments'
               }
-            ],
-              [{
-                  text: ' 📝 Мої записи',
-                  // we shall check for this value when we listen
-                  // for "callback_query"
-                  callback_data: 'appointments'
-                }
-              ]
           ],
           [
             {
@@ -495,22 +493,20 @@ function showKeyboard(user, isTutor, isAdmin = false){
             }
           ],
           [
-            [
-              {
-                text: ' 🎓 Додати навчальну дисципліну',
-                // we shall check for this value when we listen
-                // for "callback_query"
-                callback_data: 'addNewSubject'
-              }
-            ],
-            [
-              {
-                text: ' 📝 Додати можливість запису для студентів',
-                // we shall check for this value when we listen
-                // for "callback_query"
-                callback_data: 'makeAnAppointment'
-              }
-            ]
+            {
+              text: ' 🎓 Додати навчальну дисципліну',
+              // we shall check for this value when we listen
+              // for "callback_query"
+              callback_data: 'addNewSubject'
+            }
+          ],
+          [
+            {
+              text: ' 📝 Додати можливість запису для студентів',
+              // we shall check for this value when we listen
+              // for "callback_query"
+              callback_data: 'makeAnAppointment'
+            }
           ]
         ]
       }
