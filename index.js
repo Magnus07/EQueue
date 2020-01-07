@@ -388,14 +388,18 @@ function makeAnAppointment(msg){
         if (err){
           errorHandeled(err,msg.chat.id);
         } else {
-          var response = "Дисципліни:\n";
-          var opts = [];
-          for (var i = 0; i < tutor.subjects.length; i++){
-            response += (i + 1) +". " + tutor.subjects[i].subject + "\n";
-            opts.push([{text : tutor.subjects[i].subject, callback_data: 'newappointment_' + tutor.subjects[i]._id}]);
+          if (tutor === null){
+            errorHandeled(err, msg.chat.id, "Ця команда недоступна для вас;)");
+          } else {
+            var response = "Дисципліни:\n";
+            var opts = [];
+            for (var i = 0; i < tutor.subjects.length; i++){
+              response += (i + 1) +". " + tutor.subjects[i].subject + "\n";
+              opts.push([{text : tutor.subjects[i].subject, callback_data: 'newappointment_' + tutor.subjects[i]._id}]);
+            }
+            response += "Оберіть дисципліну, для якої хочете створити електронну чергу: ";
+            bot.sendMessage(msg.chat.id, response, 	{ reply_markup: { inline_keyboard: opts }});
           }
-          response += "Оберіть дисципліну, для якої хочете створити електронну чергу: ";
-          bot.sendMessage(msg.chat.id, response, 	{ reply_markup: { inline_keyboard: opts }});
         }
       })
     }
@@ -573,8 +577,8 @@ function messageAdmin(err, id){
 }
 
 
-function errorHandeled(err,id){
+function errorHandeled(err,id, message = ERR_MESSAGE){
     messageAdmin(err, id);
     console.log(err);
-    bot.sendMessage(id, ERR_MESSAGE);
+    bot.sendMessage(id, message);
 }
