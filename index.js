@@ -385,6 +385,9 @@ function makeAnAppointment(msg){
       errorHandeled(err,msg.chat.id);
     } else {
       Tutor.findOne({ user : user }).populate("subjects").exec(function(err, tutor){
+        if (err){
+          errorHandeled(err,msg.chat.id);
+        }
         var response = "Дисципліни:\n";
         var opts = [];
         for (var i = 0; i < tutor.subjects.length; i++){
