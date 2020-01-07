@@ -1,3 +1,3 @@
 # EQueue
 EQueue for CPNU Students
-Early Access!
+in Early Access!
