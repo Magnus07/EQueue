@@ -10,6 +10,7 @@ Appointment       = require("./models/appointment");
 
 mongoose.connect(process.env.MONGODB, {useNewUrlParser: true, useUnifiedTopology: true });
 
+const ERR_MESSAGE = "Сталася помилка, невідкладна допомога вже на підході.";
 
 const TOKEN = process.env.TOKEN;
 const url   = process.env.URL;
@@ -46,6 +47,9 @@ var answerCallbacks = {};
 bot.onText(/\/start/, function (msg) {
   // trying to find user in our database
   User.findOne({ id : msg.from.id }, function (err, user) {
+    if (err){
+      errorHandeled(err,msg.from.id);
+    }
     // if there's no such user
     if (user === null){
       bot.sendMessage(msg.chat.id, "Вам необхідно зареєструватися у системі. " +
@@ -62,8 +66,7 @@ bot.onText(/\/start/, function (msg) {
                   user.save(function(err,user){
                     // if there's an error
                     if (err){
-                      bot.sendMessage(msg.chat.id, "Сталася прикра помилка, скоро все владнаємо ;)");
-                      console.log(err);
+                      errorHandeled(err,msg.chat.id);
                     } else {
                       bot.sendMessage(msg.chat.id, "Привіт, " + name + " " + surname + "! Дочекайся підтвердження свого акаунту адміністратором аби почати користуватися усіма можливостями.");
                     }
@@ -74,6 +77,9 @@ bot.onText(/\/start/, function (msg) {
       });
     } else if (user.approved) {
       Tutor.findOne({user : user}, function(err, tutor){
+      if (err){
+        errorHandeled(err,msg.chat.id);
+      }
       // Admin panel interface
       if (user.id == process.env.ADMIN){
         showKeyboard(user,false,true);
@@ -83,7 +89,7 @@ bot.onText(/\/start/, function (msg) {
       } else {
         showKeyboard(user, true);
       }});
-      } else if (!user.approved) {
+     }else if (!user.approved) {
         bot.sendMessage(msg.chat.id, "Акаунт не підтверджено! Дочекайся підтвердження свого акаунту адміністратором аби почати користуватися усіма можливостями.");
       }
   });
@@ -153,6 +159,9 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
 
 function showAppointments(msg){
   Appointment.find({}).populate('subject').exec(function(err,appointments){
+    if (err){
+      errorHandeled(err,msg.chat.id);
+    } else {
     var response = "";
     for (var i = 0; i < appointments.length; i++){
       for (var j = 0; j < appointments[i].participants.length; j++){
@@ -165,7 +174,7 @@ function showAppointments(msg){
     if (response === "")
       response = "Наразі ви ніде не записані. Хутчіш записуйтесь!"
     bot.sendMessage(msg.chat.id, response);
-  })
+  }})
 }
 
 
@@ -179,17 +188,17 @@ function addNewTutor(msg){
                   // making new user
                   User.findOne({ name : name, surname : surname }, function(err, user){
                     if (err){
-                      console.log(err);
-                      bot.sendMessage(msg.chat.id, "Схоже, такого користувача не знайдено.");
-                    } else {
+                      errorHandeled(err,msg.chat.id);
+                    }
+                    else {
                       if (user === null){
                         bot.sendMessage(msg.chat.id, "Схоже, такого користувача не знайдено.");
                       } else {
                         var tutor = new Tutor({user : user});
                         tutor.save(function(err, tutor){
-                        if (err){
-                          console.log(err);
-                        } else {
+                          if (err){
+                            errorHandeled(err,msg.chat.id);
+                          } else {
                           bot.sendMessage(msg.chat.id, "Було додано нового викладача.");
                         }
                       })}
@@ -204,7 +213,7 @@ function addNewTutor(msg){
 function toApprove(msg, id){
   User.findById(id, function(err, user){
     if (err){
-      console.log(err);
+      errorHandeled(err,msg.chat.id);
     } else {
       user.approved = true;
       user.save(function(err, user){
@@ -223,7 +232,7 @@ function toApprove(msg, id){
 function showNewUsers(msg){
   User.find({ approved : false }, function(err, users){
     if (err){
-      console.log(err);
+      errorHandeled(err,msg.chat.id);
     } else {
       if (users.length === 0){
         bot.sendMessage(msg.chat.id, "Схоже, нових користувачів не знайдено.")
@@ -244,11 +253,11 @@ function showNewUsers(msg){
 function toCheckIn(appointment_id, number_in_query, msg){
   User.findOne({ id : msg.chat.id }, function(err, user){
     if (err){
-      console.log(err);
+      errorHandeled(err,msg.chat.id);
     } else {
       Appointment.findById(appointment_id, function(err, appointment){
         if (err){
-
+          errorHandeled(err,msg.chat.id);
         } else {
           for (var i = 0; i < appointment.participants.length; i++){
             // checking if user has been checked in
@@ -268,7 +277,7 @@ function toCheckIn(appointment_id, number_in_query, msg){
             appointment.participants[number_in_query].id = user.id;
             appointment.save(function(err, appointment){
               if (err){
-
+                errorHandeled(err,msg.chat.id);
               } else {
                 bot.sendMessage(msg.chat.id, "Вас записано у чергу.");
               }
@@ -283,15 +292,19 @@ function toCheckIn(appointment_id, number_in_query, msg){
 
 function toAppoint(msg, subjectID){
   Appointment.findOne({ subject : subjectID }, function(err, appointment){
-    if (err || appointment === null){
-      bot.sendMessage(msg.chat.id, "На жаль, наразі немає доступних можливостей для запису за обраною дисципліною.");
+    if (err){
+      errorHandeled(err,msg.chat.id);
     } else {
-      peopleInQueue = getCountOfPeopleInQueue(appointment.startDateTime, appointment.endDateTime, appointment.interval);
-      var opts = [];
-      for (var i = 0; i < appointment.participants.length; i++){
-        opts.push([{text : appointment.participants[i].time + "   "+ appointment.participants[i].name + " " + appointment.participants[i].surname, callback_data: 'queue_' + appointment._id + "_" + i}]);
+      if (appointment === null){
+        bot.sendMessage(msg.chat.id, "На жаль, наразі немає доступних можливостей для запису за обраною дисципліною.");
+      } else {
+        peopleInQueue = getCountOfPeopleInQueue(appointment.startDateTime, appointment.endDateTime, appointment.interval);
+        var opts = [];
+        for (var i = 0; i < appointment.participants.length; i++){
+          opts.push([{text : appointment.participants[i].time + "   "+ appointment.participants[i].name + " " + appointment.participants[i].surname, callback_data: 'queue_' + appointment._id + "_" + i}]);
+        }
+        bot.sendMessage(msg.chat.id, " Найближчий запис доступний " + (appointment.startDateTime.getDate()) + "/" + (appointment.startDateTime.getMonth() + 1) + "/" + (appointment.startDateTime.getFullYear()) + " о " + (appointment.startDateTime.getHours()) + ":" + (appointment.startDateTime.getMinutes()) + ". Усього місць: " + peopleInQueue + ". Ви можете зайняти будь-яке вільне місце: ", { reply_markup: { inline_keyboard: opts }});
       }
-      bot.sendMessage(msg.chat.id, " Найближчий запис доступний " + (appointment.startDateTime.getDate()) + "/" + (appointment.startDateTime.getMonth() + 1) + "/" + (appointment.startDateTime.getFullYear()) + " о " + (appointment.startDateTime.getHours()) + ":" + (appointment.startDateTime.getMinutes()) + ". Усього місць: " + peopleInQueue + ". Ви можете зайняти будь-яке вільне місце: ", { reply_markup: { inline_keyboard: opts }});
     }
   })
 }
@@ -318,7 +331,7 @@ function getCountOfPeopleInQueue(startDateTime, endDateTime, interval){
 function addNewSubject(msg){
   User.findOne({ id : msg.chat.id }, function(err, user){
     if (err){
-      console.log(err);
+      errorHandeled(err,msg.chat.id);
     } else {
       bot.sendMessage(msg.chat.id, "Вкажіть назву навчальної дисципліни: ").then(function () {
       answerCallbacks[msg.chat.id] = function (answer) {
@@ -329,7 +342,7 @@ function addNewSubject(msg){
         } else {
           Tutor.findOne({ user : user }, function(err, tutor){
             if (err){
-              console.log(err);
+              errorHandeled(err,msg.chat.id);
             } else {
               tutor.subjects.push(subject);
               tutor.save(function(err, tutor){
@@ -351,7 +364,7 @@ function addNewSubject(msg){
 function showSubjects(msg){
   Subjects.find({}, function(err, subjects){
     if (err){
-      console.log(err);
+      errorHandeled(err,msg.chat.id);
     } else {
       var response = "Дисципліни:\n";
       var opts = [];
@@ -369,7 +382,7 @@ function showSubjects(msg){
 function makeAnAppointment(msg){
   User.findOne({ id : msg.chat.id }, function(err, user){
     if (err){
-      console.log(err);
+      errorHandeled(err,msg.chat.id);
     } else {
       Tutor.findOne({ user : user }).populate("subjects").exec(function(err, tutor){
         var response = "Дисципліни:\n";
@@ -389,7 +402,7 @@ function makeAnAppointment(msg){
 function newAppointment(msg, subjectID){
   Appointment.findOne({subject : subjectID}, function(err,appointment){
     if (err){
-      console.log(err);
+      errorHandeled(err,msg.chat.id);
     } else {
       if (appointment === null){
         bot.sendMessage(msg.chat.id, "Вкажіть дату події у форматі \"день/місяць/рік\" . Наприклад: 01/02/2021 : ").then(function () {
@@ -415,7 +428,7 @@ function newAppointment(msg, subjectID){
                         var appointment = new Appointment({startDateTime : startDateTime, endDateTime : endDateTime, interval : interval, subject : subjectID, participants : participants});
                         appointment.save(function(err, appointment){
                           if (err){
-      
+                            errorHandeled(err,msg.chat.id);
                           } else {
                             bot.sendMessage(msg.chat.id, "Успішно збережено. Очікуйте купу студентів :)")
                           }
@@ -430,7 +443,7 @@ function newAppointment(msg, subjectID){
             if (answer.text === 'так'){
               appointment.remove(function(err){
                 if (err){
-                  console.log(err);
+                  errorHandeled(err,msg.chat.id);
                 } else{
                   bot.sendMessage(msg.chat.id, "Попередня черга була видалена.")
                 }
@@ -449,6 +462,23 @@ function showKeyboard(user, isTutor, isAdmin = false){
       reply_markup: {
         inline_keyboard: [
           [
+            [
+              {
+                text: ' 🎓 Доступні дисципліни',
+                // we shall check for this value when we listen
+                // for "callback_query"
+                callback_data: 'subjects'
+              }
+            ],
+              [{
+                  text: ' 📝 Мої записи',
+                  // we shall check for this value when we listen
+                  // for "callback_query"
+                  callback_data: 'appointments'
+                }
+              ]
+          ],
+          [
             {
               text: ' 📝 Показати нових користувачів',
               // we shall check for this value when we listen
@@ -463,6 +493,24 @@ function showKeyboard(user, isTutor, isAdmin = false){
               // for "callback_query"
               callback_data: 'addNewTutor'
             }
+          ],
+          [
+            [
+              {
+                text: ' 🎓 Додати навчальну дисципліну',
+                // we shall check for this value when we listen
+                // for "callback_query"
+                callback_data: 'addNewSubject'
+              }
+            ],
+            [
+              {
+                text: ' 📝 Додати можливість запису для студентів',
+                // we shall check for this value when we listen
+                // for "callback_query"
+                callback_data: 'makeAnAppointment'
+              }
+            ]
           ]
         ]
       }
@@ -517,4 +565,16 @@ function showKeyboard(user, isTutor, isAdmin = false){
       }
   }
   bot.sendMessage(user.id, 'Вітаємо! Декілька опцій для вас: ', opts);
+}
+
+
+function messageAdmin(err, id){
+  bot.sendMessage(process.env.ADMIN, 'Error handeled: \nMessage from id: ' + id + "\nError body: " + err);
+}
+
+
+function errorHandeled(err,id){
+    messageAdmin(err, id);
+    console.log(err);
+    bot.sendMessage(id, ERR_MESSAGE);
 }
