@@ -387,15 +387,16 @@ function makeAnAppointment(msg){
       Tutor.findOne({ user : user }).populate("subjects").exec(function(err, tutor){
         if (err){
           errorHandeled(err,msg.chat.id);
+        } else {
+          var response = "Дисципліни:\n";
+          var opts = [];
+          for (var i = 0; i < tutor.subjects.length; i++){
+            response += (i + 1) +". " + tutor.subjects[i].subject + "\n";
+            opts.push([{text : tutor.subjects[i].subject, callback_data: 'newappointment_' + tutor.subjects[i]._id}]);
+          }
+          response += "Оберіть дисципліну, для якої хочете створити електронну чергу: ";
+          bot.sendMessage(msg.chat.id, response, 	{ reply_markup: { inline_keyboard: opts }});
         }
-        var response = "Дисципліни:\n";
-        var opts = [];
-        for (var i = 0; i < tutor.subjects.length; i++){
-          response += (i + 1) +". " + tutor.subjects[i].subject + "\n";
-          opts.push([{text : tutor.subjects[i].subject, callback_data: 'newappointment_' + tutor.subjects[i]._id}]);
-        }
-        response += "Оберіть дисципліну, для якої хочете створити електронну чергу: ";
-        bot.sendMessage(msg.chat.id, response, 	{ reply_markup: { inline_keyboard: opts }});
       })
     }
   })
