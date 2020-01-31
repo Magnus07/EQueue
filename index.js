@@ -167,8 +167,12 @@ function showTutors(msg){
       errorHandeled(err,msg.chat.id, showTutors.name);
     } else {
         var response = "Викладачі:\n";
-        for (var i = 0; i < tutors.length; i++){
-          response += (i + 1) +". " + "@" + tutors[i].user.username + " " + tutors[i].user.name + " " + tutors[i].user.surname + "\n";
+        if (tutors.length != 0){
+          for (var i = 0; i < tutors.length; i++){
+            response += (i + 1) +". " + "@" + tutors[i].user.username + " " + tutors[i].user.name + " " + tutors[i].user.surname + "\n";
+          }
+        } else {
+          response = "Викладачів не знайдено.";
         }
         bot.sendMessage(msg.chat.id, response);
     }
