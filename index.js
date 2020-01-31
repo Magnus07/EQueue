@@ -136,6 +136,10 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
       addNewTutor(msg);
       return;
     }
+    if (action === "showTutors"){
+      showTutors(msg);
+      return;
+    }
     if (answer[0] === "newappointment"){
       newAppointment(msg, answer[1]);
       return;
@@ -155,6 +159,21 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
   
     bot.sendMessage(msg.chat.id, text);
 });
+
+
+function showTutors(msg){
+  Tutor.find({}).populate("user").exec(function(err,tutors){
+    if (err){
+      errorHandeled(err,msg.chat.id, showTutors.name);
+    } else {
+        var response = "Викладачі:\n";
+        for (var i = 0; i < tutors.length; i++){
+          response += (i + 1) +". " + "@" + tutors[i].user.username + tutors[i].user.name + " " + tutors[i].user.surname + "\n";
+        }
+        bot.sendMessage(msg.chat.id, response);
+    }
+  })
+}
 
 
 function showAppointments(msg){
@@ -487,6 +506,14 @@ function showKeyboard(user, isTutor, isAdmin = false){
           [
             {
               text: ' 📝 Показати нових користувачів',
+              // we shall check for this value when we listen
+              // for "callback_query"
+              callback_data: 'showNewUsers'
+            }
+          ],
+          [
+            {
+              text: ' 📝 Показати викладачів',
               // we shall check for this value when we listen
               // for "callback_query"
               callback_data: 'showNewUsers'
