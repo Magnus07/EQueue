@@ -516,7 +516,7 @@ function showKeyboard(user, isTutor, isAdmin = false){
               text: ' 📝 Показати викладачів',
               // we shall check for this value when we listen
               // for "callback_query"
-              callback_data: 'showNewUsers'
+              callback_data: 'showTutors'
             }
           ],
           [
@@ -604,7 +604,7 @@ function messageAdmin(err, id){
 }
 
 
-function errorHandeled(err,id, message = ERR_MESSAGE, func = null){
+function errorHandeled(err,id, func = null, message = ERR_MESSAGE){
     messageAdmin("Error " + err, " for id№" + id," in function " + func);
     console.log(err);
     bot.sendMessage(id, message);
