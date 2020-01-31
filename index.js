@@ -168,7 +168,7 @@ function showTutors(msg){
     } else {
         var response = "Викладачі:\n";
         for (var i = 0; i < tutors.length; i++){
-          response += (i + 1) +". " + "@" + tutors[i].user.username + tutors[i].user.name + " " + tutors[i].user.surname + "\n";
+          response += (i + 1) +". " + "@" + tutors[i].user.username + " " + tutors[i].user.name + " " + tutors[i].user.surname + "\n";
         }
         bot.sendMessage(msg.chat.id, response);
     }
