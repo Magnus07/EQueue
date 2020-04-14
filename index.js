@@ -324,7 +324,13 @@ function toCheckIn(appointment_id, number_in_query, msg){
             appointment.participants[number_in_query].name = "";
             appointment.participants[number_in_query].surname = "";
             appointment.participants[number_in_query].id = -1;
-            bot.sendMessage(msg.chat.id, "Вас відраховано;)");
+            appointment.save(function(err, appointment){
+              if (err){
+                errorHandeled(err,msg.chat.id, toCheckIn.name);
+              } else {
+                bot.sendMessage(msg.chat.id, "Вас відраховано;)");
+              }
+            })
             return;
           } 
           for (var i = 0; i < appointment.participants.length; i++){
