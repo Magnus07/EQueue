@@ -140,6 +140,10 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
       showTutors(msg);
       return;
     }
+    if (action === "messageAll"){
+      messageAll(msg);
+      return;
+    }
     if (answer[0] === "newappointment"){
       newAppointment(msg, answer[1]);
       return;
@@ -332,7 +336,7 @@ function toAppoint(msg, subjectID){
         for (var i = 0; i < appointment.participants.length; i++){
           opts.push([{text : appointment.participants[i].time + "   "+ appointment.participants[i].name + " " + appointment.participants[i].surname, callback_data: 'queue_' + appointment._id + "_" + i}]);
         }
-        bot.sendMessage(msg.chat.id, " Найближчий запис доступний " + (appointment.startDateTime.getDate()) + "/" + (appointment.startDateTime.getMonth() + 1) + "/" + (appointment.startDateTime.getFullYear()) + " о " + (appointment.startDateTime.getHours()) + ":" + (appointment.startDateTime.getMinutes()) + ". Усього місць: " + peopleInQueue + ". Ви можете зайняти будь-яке вільне місце: ", { reply_markup: { inline_keyboard: opts }});
+        bot.sendMessage(msg.chat.id, " Найближчий запис доступний " + (appointment.startDateTime.getDate()) + "/" + (appointment.startDateTime.getMonth() + 1) + "/" + (appointment.startDateTime.getFullYear()) + " о(б) " + appointment.participants[0].time + ". Усього місць: " + peopleInQueue + ". Ви можете зайняти будь-яке вільне місце: ", { reply_markup: { inline_keyboard: opts }});
       }
     }
   })
@@ -492,6 +496,25 @@ function newAppointment(msg, subjectID){
 }
 
 
+function messageAll(msg){
+  bot.sendMessage(msg.chat.id, "Відправте мені повідомлення: ").then(function () {
+      answerCallbacks[msg.chat.id] = function (answer) {
+          var text = answer.text;
+          User.find({}, function(err, users){
+            if (err){
+              errorHandeled(err,msg.chat.id, addNewTutor.name);
+            }
+            else {
+                for (var i = 0; i < users.length; i++){
+                  bot.sendMessage(users[i].id, text)
+                }
+                bot.sendMessage(msg.chat.id, "Відправлено!")
+            }
+          })
+        }
+    })
+}
+
 function showKeyboard(user, isTutor, isAdmin = false){
   var opts;
   if (isAdmin){
@@ -551,6 +574,14 @@ function showKeyboard(user, isTutor, isAdmin = false){
               // we shall check for this value when we listen
               // for "callback_query"
               callback_data: 'makeAnAppointment'
+            }
+          ],
+          [
+            {
+              text: ' 📝 Повідомити всіх',
+              // we shall check for this value when we listen
+              // for "callback_query"
+              callback_data: 'messageAll'
             }
           ]
         ]
