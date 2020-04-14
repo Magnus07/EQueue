@@ -173,7 +173,7 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
 function toSuccessQueue(subjectID, next, afternext, msg){
   Appointment.findOne({ subject : subjectID }, function(err, appointment){
     if (err){
-      errorHandeled(err,msg.chat.id, toAppoint.name);
+      errorHandeled(err,msg.chat.id, toSuccessQueue.name);
     } else {
       for (var i = 0; i < appointment.participants.length;i++)
       {
@@ -187,6 +187,14 @@ function toSuccessQueue(subjectID, next, afternext, msg){
               errorHandeled(err,msg.chat.id, toSuccessQueue.name);
             } else {
               bot.sendMessage(msg.chat.id, "Ти всьо)");
+              if (next != -1)
+              {
+                bot.sendMessage(next,"Вітаю! Тепер твоя черга!");
+              }
+              if (afternext != -1)
+              {
+                bot.sendMessage(afternext,"Очікуй! Ти наступний!");
+              }
             }
           })
           break;
@@ -195,14 +203,6 @@ function toSuccessQueue(subjectID, next, afternext, msg){
     }
   }
   )
-  if (next != -1)
-  {
-    bot.sendMessage(prenext,"Вітаю! Тепер твоя черга!");
-  }
-  if (afternext != -1)
-  {
-    bot.sendMessage(next,"Очікуй! Ти наступний!");
-  }
 }
 
 
