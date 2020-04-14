@@ -180,6 +180,14 @@ function toSuccessQueue(subjectID, next, afternext, msg){
         if (appointment.participants[i].id == msg.chat.id)
         {
           appointment.participants[i].surname += " ✅";
+
+          appointment.save(function(err, appointment){
+            if (err){
+              errorHandeled(err,msg.chat.id, toCheckIn.name);
+            } else {
+              bot.sendMessage(msg.chat.id, "Ну ок)");
+            }
+          })
           break;
         }
       }
@@ -403,7 +411,7 @@ function toAppoint(msg, subjectID){
         }
         if (checkIned)
         {
-          opts.push([{text : "Наступний!", callback_data: 'successqueue_' + appointment.subject + "_" + next + "_" + afternext}]);
+          opts.push([{text : "Я всьо ✅", callback_data: 'successqueue_' + appointment.subject + "_" + next + "_" + afternext}]);
         }
         bot.sendMessage(msg.chat.id, " Найближчий запис доступний " + (appointment.startDateTime.getDate()) + "/" + (appointment.startDateTime.getMonth() + 1) + "/" + (appointment.startDateTime.getFullYear()) + " о(б) " + appointment.participants[0].time + ". Усього місць: " + peopleInQueue + ". Ви можете зайняти будь-яке вільне місце: ", { reply_markup: { inline_keyboard: opts }});
       }
