@@ -170,7 +170,7 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
 
 
 
-function toSuccessQueue(subjectID, prenext, next, msg){
+function toSuccessQueue(subjectID, next, afternext, msg){
   Appointment.findOne({ subject : subjectID }, function(err, appointment){
     if (err){
       errorHandeled(err,msg.chat.id, toAppoint.name);
@@ -186,13 +186,13 @@ function toSuccessQueue(subjectID, prenext, next, msg){
     }
   }
   )
-  if (prenext != -1)
-  {
-    bot.sendMessage(prenext,"Вітаю! Ти наступний!");
-  }
   if (next != -1)
   {
-    bot.sendMessage(next,"Вітаю! Перед тобою залишилася одна людина!");
+    bot.sendMessage(prenext,"Вітаю! Тепер твоя черга!");
+  }
+  if (afternext != -1)
+  {
+    bot.sendMessage(next,"Очікуй! Ти наступний!");
   }
 }
 
@@ -368,7 +368,7 @@ function toAppoint(msg, subjectID){
         peopleInQueue = getCountOfPeopleInQueue(appointment.startDateTime, appointment.endDateTime, appointment.interval);
         var opts = [];
         var checkIned = false;
-        var prenext = -1;
+        var afternext = -1;
         var next = -1;
         for (var i = 0; i < appointment.participants.length; i++){
           if (appointment.participants[i].id == msg.chat.id)
@@ -378,13 +378,13 @@ function toAppoint(msg, subjectID){
             {
               if (appointment.participants[j].id != -1)
               {
-                if (prenext == -1)
-                {
-                  prenext = appointment.participants[j].id;
-                }
-                else if (next == -1)
+                if (next == -1)
                 {
                   next = appointment.participants[j].id;
+                }
+                else if (afternext == -1)
+                {
+                  afternext = appointment.participants[j].id;
                 }
                 else 
                 {
@@ -397,7 +397,7 @@ function toAppoint(msg, subjectID){
         }
         if (checkIned)
         {
-          opts.push([{text : "Наступний!", callback_data: 'successqueue_' + appointment.subject + "_" + prenext + "_" + next}]);
+          opts.push([{text : "Наступний!", callback_data: 'successqueue_' + appointment.subject + "_" + next + "_" + afternext}]);
         }
         bot.sendMessage(msg.chat.id, " Найближчий запис доступний " + (appointment.startDateTime.getDate()) + "/" + (appointment.startDateTime.getMonth() + 1) + "/" + (appointment.startDateTime.getFullYear()) + " о(б) " + appointment.participants[0].time + ". Усього місць: " + peopleInQueue + ". Ви можете зайняти будь-яке вільне місце: ", { reply_markup: { inline_keyboard: opts }});
       }
