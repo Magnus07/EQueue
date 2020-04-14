@@ -156,6 +156,10 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
       toCheckIn(answer[1], answer[2], msg);
       return;
     }
+    if (answer[0] === "successqueue"){
+      toSuccessQueue(answer[1], answer[2], answer[3], msg);
+      return;
+    }
     if (answer[0] === "toapprove"){
       toApprove(msg,answer[1]);
       return;
@@ -163,6 +167,34 @@ bot.on('callback_query', function onCallbackQuery(callbackQuery) {
   
     bot.sendMessage(msg.chat.id, text);
 });
+
+
+
+function toSuccessQueue(subjectID, prenext, next, msg){
+  Appointment.findOne({ subject : subjectID }, function(err, appointment){
+    if (err){
+      errorHandeled(err,msg.chat.id, toAppoint.name);
+    } else {
+      for (var i = 0; i < appointment.participants.length;i++)
+      {
+        if (appointment.participants[i].id == msg.chat.id)
+        {
+          appointment.participants[i].surname += " ✅";
+          break;
+        }
+      }
+    }
+  }
+  )
+  if (prenext != -1)
+  {
+    bot.sendMessage(prenext,"Вітаю! Ти наступний!");
+  }
+  if (next != -1)
+  {
+    bot.sendMessage(next,"Вітаю! Перед тобою залишилася одна людина!");
+  }
+}
 
 
 function showTutors(msg){
@@ -333,8 +365,37 @@ function toAppoint(msg, subjectID){
       } else {
         peopleInQueue = getCountOfPeopleInQueue(appointment.startDateTime, appointment.endDateTime, appointment.interval);
         var opts = [];
+        var checkIned = false;
+        var prenext = -1;
+        var next = -1;
         for (var i = 0; i < appointment.participants.length; i++){
+          if (appointment.participants[i].id == msg.chat.id)
+          {
+            checkIned = true;
+            for (var j = i; i < appointment.participants.length; j++)
+            {
+              if (appointment.participants[j].id != -1)
+              {
+                if (prenext == -1)
+                {
+                  prenext = appointment.participants[j].id;
+                }
+                else if (next == -1)
+                {
+                  next = appointment.participants[j].id;
+                }
+                else 
+                {
+                  break;
+                }
+              }
+            }
+          }
           opts.push([{text : appointment.participants[i].time + "   "+ appointment.participants[i].name + " " + appointment.participants[i].surname, callback_data: 'queue_' + appointment._id + "_" + i}]);
+        }
+        if (checkIned)
+        {
+          opts.push([{text : "Наступний!", callback_data: 'successqueue_' + appointment.subject + "_" + prenext + "_" + next}]);
         }
         bot.sendMessage(msg.chat.id, " Найближчий запис доступний " + (appointment.startDateTime.getDate()) + "/" + (appointment.startDateTime.getMonth() + 1) + "/" + (appointment.startDateTime.getFullYear()) + " о(б) " + appointment.participants[0].time + ". Усього місць: " + peopleInQueue + ". Ви можете зайняти будь-яке вільне місце: ", { reply_markup: { inline_keyboard: opts }});
       }
@@ -482,6 +543,13 @@ function newAppointment(msg, subjectID){
         bot.sendMessage(msg.chat.id, "Електронна черга вже сформована на цю дисципліну. Якщо ви хочете видалити її і створити нову, уведіть \"так\"").then(function () {
           answerCallbacks[msg.chat.id] = function (answer) {
             if (answer.text === 'так'){
+              for (var i = 0; i < appointment.participants.length;i++)
+              {
+                if (appointment.participants[i].id != -1)
+                {
+                  bot.sendMessage(appointment.participants[i].id, "Попередня черга на дисципліну, на яку ви були записані, була видалена. Хто знає, можливо, скоро з'явиться нова.")
+                }
+              }
               appointment.remove(function(err){
                 if (err){
                   errorHandeled(err,msg.chat.id, newAppointment.name);
