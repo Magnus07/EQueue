@@ -389,9 +389,9 @@ function toAppoint(msg, subjectID){
           if (appointment.participants[i].id == msg.chat.id)
           {
             checkIned = true;
-            for (var j = i+1; i < appointment.participants.length; j++)
+            for (var j = i+1; j < appointment.participants.length; j++)
             {
-              if (appointment.participants[j].id != -1)
+              if (appointment.participants[j].id != -1 || appointment.participants[j].id != 200)
               {
                 if (next == -1)
                 {
