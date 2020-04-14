@@ -318,6 +318,15 @@ function toCheckIn(appointment_id, number_in_query, msg){
         if (err){
           errorHandeled(err,msg.chat.id, toCheckIn.name);
         } else {
+          // if sb wants to check out
+          if (appointment.participants[number_in_query].id == user.id)
+          {
+            appointment.participants[number_in_query].name = "";
+            appointment.participants[number_in_query].surname = "";
+            appointment.participants[number_in_query].id = -1;
+            bot.sendMessage(msg.chat.id, "Вас відраховано;)");
+            return;
+          } 
           for (var i = 0; i < appointment.participants.length; i++){
             // checking if user has been checked in
             if (appointment.participants[i].id === msg.chat.id){
@@ -325,15 +334,8 @@ function toCheckIn(appointment_id, number_in_query, msg){
               appointment.participants[i].surname = "";
               appointment.participants[i].id = -1;
             }
-          } // if sb wants to check out
-          if (appointment.participants[number_in_query].id == user.id)
-          {
-            appointment.participants[number_in_query].name = "";
-            appointment.participants[number_in_query].surname = "";
-            appointment.participants[number_in_query].id = -1;
-            bot.sendMessage(msg.chat.id, "Вас відраховано;)");
-          } // if the place is busy
-          else if (appointment.participants[number_in_query].name != "" && appointment.participants[number_in_query].surname != "" && appointment.participants[number_in_query].id != -1){
+          }// if the place is busy
+          if (appointment.participants[number_in_query].name != "" && appointment.participants[number_in_query].surname != "" && appointment.participants[number_in_query].id != -1){
             bot.sendMessage(msg.chat.id, "На жаль, ви не можете записатися у вказаний час. Певно хтось вас випередив.");
           }
           else {
