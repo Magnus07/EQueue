@@ -180,12 +180,13 @@ function toSuccessQueue(subjectID, next, afternext, msg){
         if (appointment.participants[i].id == msg.chat.id)
         {
           appointment.participants[i].surname += " ✅";
+          appointment.participants[i].id = 200;
 
           appointment.save(function(err, appointment){
             if (err){
-              errorHandeled(err,msg.chat.id, toCheckIn.name);
+              errorHandeled(err,msg.chat.id, toSuccessQueue.name);
             } else {
-              bot.sendMessage(msg.chat.id, "Ну ок)");
+              bot.sendMessage(msg.chat.id, "Ти всьо)");
             }
           })
           break;
