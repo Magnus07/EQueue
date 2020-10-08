@@ -680,6 +680,21 @@ function showKeyboard(user, isTutor, isAdmin = false){
         inline_keyboard: [
           [
             {
+              text: ' 🎓 Доступні дисципліни',
+              // we shall check for this value when we listen
+              // for "callback_query"
+              callback_data: 'subjects'
+            }
+          ],
+            [{
+                text: ' 📝 Мої записи',
+                // we shall check for this value when we listen
+                // for "callback_query"
+                callback_data: 'appointments'
+              }
+            ],
+          [
+            {
               text: ' 🎓 Додати навчальну дисципліну',
               // we shall check for this value when we listen
               // for "callback_query"
